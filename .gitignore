@@ -166,3 +166,4 @@ cython_debug/
 *.jpeg
 input/
 output/
+checkpoints
