@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textile Defect Detection System</title>
+    <!-- <link rel="icon" href="/static/favicon.ico" type="image/x-icon"> -->
+    <link rel="apple-touch-icon" sizes="180x180" href="//www.redditstatic.com/desktop2x/img/favicon/apple-icon-180x180.png" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 50px;
+            display: flex;
+            flex-direction: row;
+        }
+        #main-content {
+            flex: 3;
+            text-align: center;
+        }
+        #side-pane {
+            flex: 1;
+            padding: 10px;
+            border-left: 2px solid #ccc;
+            max-width: 600px;
+            overflow-y: auto;
+        }
+        #side-pane h2 {
+            text-align: center;
+        }
+        .image-pair {
+            margin-bottom: 15px;
+        }
+        .image-pair img {
+            width: 45%;
+            height: auto;
+            margin: 0 10px
+        }
+        #image-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+        }
+        #image-container img {
+            margin: 0 15px;
+            width: 500px;
+            height: auto;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #218838;
+        }
+        .loader {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main content section -->
+    <div id="main-content">
+        <h1>Textile Defect Detection System</h1>
+        <p>Upload an image and detect textile defects</p>
+        
+        <!-- File upload form -->
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" id="file-input" name="image" accept="image/*" required>
+            <button type="submit" class="btn">Upload and Process</button>
+        </form>
+
+        <!-- Loader to indicate processing -->
+        <div class="loader" id="loader">
+            <img src="/static/loader.gif" alt="Loading...">
+            <p>Processing image...</p>
+        </div>
+
+        <!-- Display original and processed images -->
+        <div id="image-container">
+            <img id="original-image" src="#" alt="Original Image" style="display:none;">
+            <img id="processed-image" src="#" alt="Processed Image" style="display:none;">
+        </div>
+    </div>
+
+    <!-- Side pane to display the gallery -->
+    <div id="side-pane">
+        <h2>History</h2>
+        <div id="image-gallery"></div>
+    </div>
+
+    <script>
+        document.getElementById('upload-form').onsubmit = async function(e) {
+            e.preventDefault();
+
+            // Get the file from the input
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            // Show loader
+            document.getElementById('loader').style.display = 'block';
+
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                // Send image to the backend for processing
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Parse JSON response
+                const result = await response.json();
+
+                // Hide loader
+                document.getElementById('loader').style.display = 'none';
+
+                // Display original and processed images
+                const originalImage = document.getElementById('original-image');
+                const processedImage = document.getElementById('processed-image');
+                
+                originalImage.src = result.original_image_url;
+                processedImage.src = result.processed_image_url;
+                
+                originalImage.style.display = 'block';
+                processedImage.style.display = 'block';
+
+                // Add images to the gallery
+                addToGallery(result.original_image_url, result.processed_image_url);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Image processing failed.');
+            }
+        }
+
+        // Function to add image pair to the gallery
+        function addToGallery(originalImageUrl, processedImageUrl) {
+            const gallery = document.getElementById('image-gallery');
+
+            // Create a div to hold the image pair
+            const imagePairDiv = document.createElement('div');
+            imagePairDiv.classList.add('image-pair');
+
+            // Create and append original image
+            const originalImage = document.createElement('img');
+            originalImage.src = originalImageUrl;
+            originalImage.alt = 'Original Image';
+            imagePairDiv.appendChild(originalImage);
+
+            // Create and append processed image
+            const processedImage = document.createElement('img');
+            processedImage.src = processedImageUrl;
+            processedImage.alt = 'Processed Image';
+            imagePairDiv.appendChild(processedImage);
+
+            // Append the image pair to the gallery
+            gallery.appendChild(imagePairDiv);
+        }
+    </script>
+
+</body>
+</html>
